@@ -1,0 +1,15 @@
+Risco,HC,DI,GA,RND
+alto,ruim,alta,nenhuma,0 a 15
+alto,desconhecida,alta,nenhuma,15 a 35
+moderado,desconhecida,baixa,nenhuma,15 a 35
+alto,desconhecida,baixa,nenhuma,0 a 15
+baixo,desconhecida,baixa,nenhuma,> 35
+baixo,desconhecida,baixa,adequada,> 35
+alto,ruim,baixa,nenhuma,0 a 15
+moderado,ruim,baixa,adequada,> 35
+baixo,boa,baixa,nenhuma,> 35
+baixo,boa,alta,adequada,> 35
+alto,boa,alta,nenhuma,0 a 15
+moderado,boa,alta,nenhuma,15 a 35
+baixo,boa,alta,nenhuma,> 35
+alto,ruim,alta,nenhuma,15 a 35
