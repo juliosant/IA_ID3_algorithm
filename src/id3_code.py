@@ -1,5 +1,6 @@
 import csv
 from copy import copy, deepcopy
+from math import log
 
 class Risco:
     def __init__(self, chave, pai = None):
@@ -26,6 +27,70 @@ def mostrar_arvore(no):
     elif type(no) == Risco:
         pass
     
+def entropia(tabela, propriedades):
+    riscos_frequencia = {}
+    
+    # Calcular a entropia da tabela
+    for linha_id in tabela:
+        count = 0
+        if not linha_id['Risco'] in riscos_frequencia:
+            for linha1 in tabela:
+                if linha1['Risco'] == linha_id['Risco']:
+                    count +=1
+            riscos_frequencia[linha_id['Risco']] = count
+    #print(riscos_frequencia)
+
+    razao_frequencia = {}
+    for frequencia in riscos_frequencia.items():
+        razao_frequencia[f'p_{frequencia[0]}'] = frequencia[1]/len(tabela)
+    #print(razao_frequencia)
+
+    e_tabela = 0
+    for frequencia in razao_frequencia.values():
+        e_tabela -= frequencia * log(frequencia, 2)
+    #print(e_tabela)
+
+    #Calcular entropia dos atributos
+    atributos_frequencia = {}
+    for propriedade in propriedades:
+        valor_atributo = {}
+        for linha_id in tabela: 
+            count = 0
+            if not linha_id[propriedade] in valor_atributo:
+                for linha1 in tabela:
+                    if linha1[propriedade] == linha_id[propriedade]:
+                        count +=1
+                valor_atributo[linha_id[propriedade]] = count
+        atributos_frequencia[propriedade] = valor_atributo
+
+
+    filtro_tabela = {}
+    for atributo in atributos_frequencia.items():
+        #print(atributo)
+        
+        filtro_valor = {}
+        for valor_atrib in atributo[1].keys():
+            filtro_atributo = []
+            for linha in tabela:
+                if linha[atributo[0]] == valor_atrib:
+                    filtro_atributo.append(linha)
+            #print(filtro)
+            
+            filtro_classe = {}
+            for valor_risco in riscos_frequencia.keys():
+                for linha_id in filtro_atributo:
+                    count = 0
+                    if not linha_id['Risco'] in filtro_classe:
+                        for linha in filtro_atributo:
+                            if linha['Risco'] == linha_id['Risco']:
+                                count +=1
+                        filtro_classe[linha_id['Risco']] = count
+                filtro_valor[valor_atrib] = filtro_classe       
+        filtro_tabela[atributo[0]] = filtro_valor
+
+    for linha in filtro_tabela.items():
+        print(f'{linha[0]} - {linha[1]}')
+
 
 
 def induzir_arvore(tabela, propriedades):
@@ -104,11 +169,15 @@ if __name__=='__main__':
         tabela = []
         for i in csv_reader:
             tabela.append(i)
-
+        
         propriedades = copy(gerar_propriedades(tabela))
+        
+        entropia(copy(tabela), copy(propriedades))
 
-        arv = induzir_arvore(copy(tabela), copy(propriedades))
-        print(arv) 
+        #for i in tabela:
+        #    print(i)
+        #arv = induzir_arvore(copy(tabela), copy(propriedades))
+        #print(arv) 
 
-        mostrar_arvore(arv)
+        #mostrar_arvore(arv)
         
