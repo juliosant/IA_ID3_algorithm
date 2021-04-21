@@ -62,7 +62,9 @@ def entropia(tabela, propriedades):
                         count +=1
                 valor_atributo[linha_id[propriedade]] = count
         atributos_frequencia[propriedade] = valor_atributo
-
+    
+    #for linha in atributos_frequencia.items():
+    #    print(f'{linha[0]} - {linha[1]}')
 
     filtro_tabela = {}
     for atributo in atributos_frequencia.items():
@@ -88,13 +90,49 @@ def entropia(tabela, propriedades):
                 filtro_valor[valor_atrib] = filtro_classe       
         filtro_tabela[atributo[0]] = filtro_valor
 
-    for linha in filtro_tabela.items():
-        print(f'{linha[0]} - {linha[1]}')
+    #for linha in filtro_tabela.items():
+    #    print(f'{linha[0]} - {linha[1]}')
+
+    entropia_valores = {}
+    for atributo in filtro_tabela.items():
+        #print(atributo)
+        entropia_valor = {}
+        for valor in atributo[1].items():
+            #print(valor)
+            entropia_calculo = 0
+            for valor_risco in valor[1].values():
+                #print(valor_risco)
+                #print(sum(valor[1].values()))
+                entropia_calculo -= valor_risco/sum(valor[1].values()) * log(valor_risco/sum(valor[1].values()), 2)
+            entropia_valor[valor[0]] = entropia_calculo
+            #print(entropia_valor)
+        entropia_valores[atributo[0]] = entropia_valor
+    
+    #for linha in entropia_valores.items():
+    #    print(f' {linha[0]} - {linha[1]}')
+
+    entropia_atributos = {}
+    for atributo in entropia_valores.items():
+        entropia_calculo = 0
+        for valor in atributo[1].items():
+            for atributo_p in atributos_frequencia.items():
+                if atributo[0] == atributo_p[0]:
+                    for valor_p in atributo_p[1].items():
+                        if valor[0] == valor_p[0]:
+                            entropia_calculo += valor[1] * valor_p[1]/sum(atributo_p[1].values())
+        entropia_atributos[atributo[0]] = entropia_calculo
+    
+    #for linha in entropia_atributos.items():
+    #    print(f' {linha[0]} - {linha[1]}')
 
 
+    for entropia in entropia_atributos.items():
+        if entropia[1] == min(entropia_atributos.values()):
+            #print(entropia[0])
+            return entropia[0]
 
 def induzir_arvore(tabela, propriedades):
-    
+    #print(propriedades)
     riscos = []
     
     for i in tabela:
@@ -113,7 +151,8 @@ def induzir_arvore(tabela, propriedades):
         return False
     else:
         propriedades_temp = copy(propriedades)
-        propriedade = propriedades_temp.pop(0) # Copiar valor exclído para a propriedade
+        #propriedade = propriedades_temp.pop(0) # Copiar valor exclído para a propriedade
+        propriedade = propriedades_temp.pop(propriedades_temp.index(entropia(copy(tabela), copy(propriedades))))
 
         #print(f'removendo {propriedade} das propriedades')
         valores_propriedade = []
@@ -172,12 +211,14 @@ if __name__=='__main__':
         
         propriedades = copy(gerar_propriedades(tabela))
         
-        entropia(copy(tabela), copy(propriedades))
-
+        #entropia_resultado = entropia(copy(tabela), copy(propriedades))
+        #print(entropia_resultado)
+        
         #for i in tabela:
         #    print(i)
-        #arv = induzir_arvore(copy(tabela), copy(propriedades))
-        #print(arv) 
 
-        #mostrar_arvore(arv)
+        arv = induzir_arvore(copy(tabela), copy(propriedades)) 
+
+        mostrar_arvore(arv)
+        
         
