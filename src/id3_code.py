@@ -2,10 +2,14 @@ import csv
 from copy import copy, deepcopy
 from math import log
 
-class Risco:
+global base_resultado
+base_resultado = 'Risco'
+
+class Resultado():
     def __init__(self, chave, pai = None):
         self.chave = chave
         self.pai = pai
+
 
 class Propriedade():
     def __init__(self, chave, valores_propriedade, pai = None):
@@ -17,31 +21,34 @@ class Propriedade():
 
 
 def mostrar_arvore(no):
-    print(no.chave)
+    print(f'{no.chave}')
     if type(no) == Propriedade:
         for attrib in no.valores_propriedade.items():
             print(f'Atributo {attrib[0]} - {attrib[1].chave}')
             if type(attrib[1]) == Propriedade:
                 mostrar_arvore(attrib[1])
                 print(f'Retornando à {no.chave}')
-    elif type(no) == Risco:
-        pass
-    
+    #elif type(no) == Resultado:
+    #    pass
+
+
 def entropia(tabela, propriedades):
-    riscos_frequencia = {}
-    
-    # Calcular a entropia da tabela
+    #                       ENTROPIA TABELA
+
+    # Buscar todos os valores possíveis no resultado da tabela e suas respectivas frequẽncias
+    resultados_frequencia = {}
     for linha_id in tabela:
         count = 0
-        if not linha_id['Risco'] in riscos_frequencia:
-            for linha1 in tabela:
-                if linha1['Risco'] == linha_id['Risco']:
+        if not linha_id[base_resultado] in resultados_frequencia:
+            for linha in tabela:
+                if linha[base_resultado] == linha_id[base_resultado]:
                     count +=1
-            riscos_frequencia[linha_id['Risco']] = count
-    #print(riscos_frequencia)
+            resultados_frequencia[linha_id[base_resultado]] = count
+    #print(resultados_frequencia)
 
+    # Razão entre a frequencia do resultado pela qtde total na da tabela
     razao_frequencia = {}
-    for frequencia in riscos_frequencia.items():
+    for frequencia in resultados_frequencia.items():
         razao_frequencia[f'p_{frequencia[0]}'] = frequencia[1]/len(tabela)
     #print(razao_frequencia)
 
@@ -50,157 +57,171 @@ def entropia(tabela, propriedades):
         e_tabela -= frequencia * log(frequencia, 2)
     #print(e_tabela)
 
-    #Calcular entropia dos atributos
-    atributos_frequencia = {}
+
+    #                       ENTROPIA ATRIBUTOS
+    # Buscar todas as propriedade atual da tabela.
+    propriedades_frequencia = {}
     for propriedade in propriedades:
-        valor_atributo = {}
+        valores_frequencia = {}
+        # Buscar todos os valores possíveis na propriedade atual da tabela.
         for linha_id in tabela: 
             count = 0
-            if not linha_id[propriedade] in valor_atributo:
-                for linha1 in tabela:
-                    if linha1[propriedade] == linha_id[propriedade]:
+            if not linha_id[propriedade] in valores_frequencia:
+                for linha in tabela:
+                    if linha[propriedade] == linha_id[propriedade]:
                         count +=1
-                valor_atributo[linha_id[propriedade]] = count
-        atributos_frequencia[propriedade] = valor_atributo
+                valores_frequencia[linha_id[propriedade]] = count
+        propriedades_frequencia[propriedade] = valores_frequencia
     
-    #for linha in atributos_frequencia.items():
+    #for linha in propriedades_frequencia.items():
     #    print(f'{linha[0]} - {linha[1]}')
 
-    filtro_tabela = {}
-    for atributo in atributos_frequencia.items():
-        #print(atributo)
+    propriedades_freq_resultado = {}
+    for propriedade in propriedades_frequencia.items():
+        #print(propriedade)
         
-        filtro_valor = {}
-        for valor_atrib in atributo[1].keys():
-            filtro_atributo = []
+        # Extrair uma nova tabela apenas com valores específio de uma determinada propriedade
+        valores_frequencia = {}
+        for valor in propriedade[1].keys():
+            nova_tabela = []
             for linha in tabela:
-                if linha[atributo[0]] == valor_atrib:
-                    filtro_atributo.append(linha)
-            #print(filtro)
-            
-            filtro_classe = {}
-            for valor_risco in riscos_frequencia.keys():
-                for linha_id in filtro_atributo:
-                    count = 0
-                    if not linha_id['Risco'] in filtro_classe:
-                        for linha in filtro_atributo:
-                            if linha['Risco'] == linha_id['Risco']:
-                                count +=1
-                        filtro_classe[linha_id['Risco']] = count
-                filtro_valor[valor_atrib] = filtro_classe       
-        filtro_tabela[atributo[0]] = filtro_valor
+                if linha[propriedade[0]] == valor:
+                    nova_tabela.append(copy(linha))
+            #print(valor)
+        #print(valores_frequencia)
 
-    #for linha in filtro_tabela.items():
+            resultados_freq = {}
+            # Buscar todos os valores possíveis no resultado da tabela e suas respectivas frequẽncias da tabela extraída.
+            for valor_resultado in resultados_frequencia.keys():
+                for linha_id in nova_tabela: # Cada atribut
+                    count = 0
+                    if not linha_id[base_resultado] in resultados_freq:
+                        for linha in nova_tabela: # Quantidade de cada propriedade
+                            if linha[base_resultado] == linha_id[base_resultado]:
+                                count +=1
+                        resultados_freq[linha_id[base_resultado]] = count
+                valores_frequencia[valor] = resultados_freq       
+        propriedades_freq_resultado[propriedade[0]] = valores_frequencia
+
+    #for linha in propriedades_freq_resultado.items():
     #    print(f'{linha[0]} - {linha[1]}')
 
-    entropia_valores = {}
-    for atributo in filtro_tabela.items():
-        #print(atributo)
+    # Calcular entropia para cadda valor da propriedade
+    e_valores = {}
+    for propriedade in propriedades_freq_resultado.items():
+        #print(propriedade)
         entropia_valor = {}
-        for valor in atributo[1].items():
+        for valor in propriedade[1].items():
             #print(valor)
             entropia_calculo = 0
-            for valor_risco in valor[1].values():
-                #print(valor_risco)
+            for freq_resultado in valor[1].values():
+                #print(freq_resultado)
                 #print(sum(valor[1].values()))
-                entropia_calculo -= valor_risco/sum(valor[1].values()) * log(valor_risco/sum(valor[1].values()), 2)
+                entropia_calculo -= freq_resultado/sum(valor[1].values()) * log(freq_resultado/sum(valor[1].values()), 2)
             entropia_valor[valor[0]] = entropia_calculo
             #print(entropia_valor)
-        entropia_valores[atributo[0]] = entropia_valor
+        e_valores[propriedade[0]] = entropia_valor
     
-    #for linha in entropia_valores.items():
+    #for linha in e_valores.items():
     #    print(f' {linha[0]} - {linha[1]}')
 
-    entropia_atributos = {}
-    for atributo in entropia_valores.items():
+
+    # Calcular entropia para cadda propriedade
+    e_propriedades = {}
+    for atributo in e_valores.items():
         entropia_calculo = 0
         for valor in atributo[1].items():
-            for atributo_p in atributos_frequencia.items():
+            for atributo_p in propriedades_frequencia.items():
                 if atributo[0] == atributo_p[0]:
                     for valor_p in atributo_p[1].items():
                         if valor[0] == valor_p[0]:
                             entropia_calculo += valor[1] * valor_p[1]/sum(atributo_p[1].values())
-        entropia_atributos[atributo[0]] = entropia_calculo
+        e_propriedades[atributo[0]] = entropia_calculo
     
-    #for linha in entropia_atributos.items():
+    #for linha in e_propriedades.items():
     #    print(f' {linha[0]} - {linha[1]}')
 
 
-    for entropia in entropia_atributos.items():
-        if entropia[1] == min(entropia_atributos.values()):
+    for entropia in e_propriedades.items():
+        if entropia[1] == min(e_propriedades.values()):
             #print(entropia[0])
             return entropia[0]
 
+
 def induzir_arvore(tabela, propriedades):
-    #print(propriedades)
-    riscos = []
+    resultados = []
     
-    for i in tabela:
-        if not i['Risco'] in riscos:
-            riscos.append(i['Risco'])
-            #print(i['Risco'])
+    # Buscar todos os valores possíveis no resultado da tabela.
+    for i in tabela: 
+        if not i[base_resultado] in resultados:
+            resultados.append(i[base_resultado])
+            #print(i[base_resultado])
 
-    
-    if len(riscos) == 1: # mesma classe
-        print(f'*****Retornar o nó folha {riscos[0]}*****')
-        risco = Risco(riscos[0])
-        return risco
+    # Mesmo resultado
+    if len(resultados) == 1 and len(propriedades) > 0:
+        #print(f'*****Retornar o nó folha {resultados[0]}*****')
+        classe_resultado = Resultado(resultados[0])
+        return classe_resultado
 
+     # Sem propriedades
     elif len(propriedades) == 0:
-        print("*****Retornar o nó folha co alguma coisa*****") # Sem propriedades
+        #print("*****Retornar o nó folha co alguma coisa*****")
         return False
+    
     else:
-        propriedades_temp = copy(propriedades)
-        #propriedade = propriedades_temp.pop(0) # Copiar valor exclído para a propriedade
-        propriedade = propriedades_temp.pop(propriedades_temp.index(entropia(copy(tabela), copy(propriedades))))
+        # Copiar valor exclído para a propriedade
+        indice_propriedade = propriedades.index(entropia(copy(tabela), copy(propriedades)))
+        propriedade = propriedades.pop(indice_propriedade)
 
-        #print(f'removendo {propriedade} das propriedades')
+        # Buscar todos os valores possíveis na propriedade da tabela.
         valores_propriedade = []
         for i in tabela:
             if not i[propriedade] in valores_propriedade:
                 valores_propriedade.append(i[propriedade])
 
-        propriedade_classe = Propriedade(propriedade, copy(valores_propriedade))
+        classe_propriedade = Propriedade(propriedade, copy(valores_propriedade))
 
-        #print(propriedades_temp)
+        # Atribuir valor (classe) para a cada chave (valor da propriedade)
         for valor in valores_propriedade:
             nova_tabela = []
-    
+
+            # Extrair uma nova tabela apenas com valores específio de uma determinada propriedade
             for linha in tabela:
                 if linha[propriedade] == valor:
                     nova_tabela.append(copy(linha))
-            drop_coluna = deepcopy(nova_tabela) 
-        
-            for linha in drop_coluna:
+
+            # Remover da tabela extraída a propriedade atual
+            for linha in nova_tabela:
                 linha.pop(propriedade, None)
             #----tmp----
             #for linha in drop_coluna:
             #    print(linha)
-            no = induzir_arvore(copy(drop_coluna), copy(propriedades_temp))
+            no = induzir_arvore(copy(nova_tabela), copy(propriedades))
 
-            propriedade_classe.valores_propriedade[valor] = no
+            classe_propriedade.valores_propriedade[valor] = no
             #---tmp---
             #print('-'*20)
-            #print(f'Propriedade {propriedade_classe.chave}')
-            #print(propriedade_classe.valores_propriedade)
+            #print(f'Propriedade {classe_propriedade.chave}')
+            #print(classe_propriedade.valores_propriedade)
             #print('Atributos:')
-            #for value in propriedade_classe.valores_propriedade.items():
+            #for value in classe_propriedade.valores_propriedade.items():
             #    if value[1] !=  None:
             #        print(f'{value[0]} - {value[1].chave}')
             #    else:
             #        print(f'{value[0]} - {value[1]}')
-            no.pai = propriedade_classe
+            no.pai = classe_propriedade
             #print('-'*20)
-        return propriedade_classe
+        return classe_propriedade
 
 
 def gerar_propriedades(tabela):
     propriedades = []
 
     propriedades = copy(list(tabela[0].keys()))
-    propriedades.remove('Risco')
+    propriedades.remove(base_resultado)
     return propriedades    
     
+
 if __name__=='__main__':
     with open('Risco.csv', 'r') as csvfile:
         csv_reader = csv.DictReader(csvfile)
@@ -209,16 +230,14 @@ if __name__=='__main__':
         for i in csv_reader:
             tabela.append(i)
         
-        propriedades = copy(gerar_propriedades(tabela))
-        
-        #entropia_resultado = entropia(copy(tabela), copy(propriedades))
-        #print(entropia_resultado)
-        
         #for i in tabela:
         #    print(i)
 
+        propriedades = copy(gerar_propriedades(tabela))
+        
         arv = induzir_arvore(copy(tabela), copy(propriedades)) 
 
         mostrar_arvore(arv)
-        
-        
+
+        #entropia_resultado = entropia(copy(tabela), copy(propriedades))
+        #print(entropia_resultado)
