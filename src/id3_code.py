@@ -1,9 +1,10 @@
+import os
+import platform
 import csv
-from copy import copy, deepcopy
+
+from copy import copy
 from math import log
 
-global base_resultado
-base_resultado = 'Risco'
 
 class Resultado():
     def __init__(self, chave, pai = None):
@@ -18,6 +19,15 @@ class Propriedade():
         for i in valores_propriedade:
             self.valores_propriedade[i] = None
         self.pai = pai
+
+
+def limpar_janela():
+    #Detectar o sistema operacional
+    op_sys = platform.system()
+    if op_sys == "Linux":
+        os.system("clear")
+    elif op_sys == "Windows":
+        os.system("cls")
 
 
 def mostrar_arvore(no):
@@ -46,17 +56,19 @@ def entropia(tabela, propriedades):
             resultados_frequencia[linha_id[base_resultado]] = count
     #print(resultados_frequencia)
 
+    
     # Razão entre a frequencia do resultado pela qtde total na da tabela
     razao_frequencia = {}
     for frequencia in resultados_frequencia.items():
         razao_frequencia[f'p_{frequencia[0]}'] = frequencia[1]/len(tabela)
     #print(razao_frequencia)
+    
 
     e_tabela = 0
     for frequencia in razao_frequencia.values():
         e_tabela -= frequencia * log(frequencia, 2)
     #print(e_tabela)
-
+    
 
     #                       ENTROPIA ATRIBUTOS
     # Buscar todas as propriedade atual da tabela.
@@ -76,6 +88,7 @@ def entropia(tabela, propriedades):
     #for linha in propriedades_frequencia.items():
     #    print(f'{linha[0]} - {linha[1]}')
 
+    
     propriedades_freq_resultado = {}
     for propriedade in propriedades_frequencia.items():
         #print(propriedade)
@@ -106,7 +119,7 @@ def entropia(tabela, propriedades):
     #for linha in propriedades_freq_resultado.items():
     #    print(f'{linha[0]} - {linha[1]}')
 
-    # Calcular entropia para cadda valor da propriedade
+    # Calcular entropia para cada valor da propriedade
     e_valores = {}
     for propriedade in propriedades_freq_resultado.items():
         #print(propriedade)
@@ -125,22 +138,20 @@ def entropia(tabela, propriedades):
     #for linha in e_valores.items():
     #    print(f' {linha[0]} - {linha[1]}')
 
-
-    # Calcular entropia para cadda propriedade
+    # Calcular entropia para cada propriedade
     e_propriedades = {}
-    for atributo in e_valores.items():
+    for propriedade in e_valores.items():
         entropia_calculo = 0
-        for valor in atributo[1].items():
-            for atributo_p in propriedades_frequencia.items():
-                if atributo[0] == atributo_p[0]:
-                    for valor_p in atributo_p[1].items():
+        for valor in propriedade[1].items():
+            for propriedade_p in propriedades_frequencia.items():
+                if propriedade[0] == propriedade_p[0]:
+                    for valor_p in propriedade_p[1].items():
                         if valor[0] == valor_p[0]:
-                            entropia_calculo += valor[1] * valor_p[1]/sum(atributo_p[1].values())
-        e_propriedades[atributo[0]] = entropia_calculo
+                            entropia_calculo += valor[1] * valor_p[1]/sum(propriedade_p[1].values())
+        e_propriedades[propriedade[0]] = entropia_calculo
     
     #for linha in e_propriedades.items():
     #    print(f' {linha[0]} - {linha[1]}')
-
 
     for entropia in e_propriedades.items():
         if entropia[1] == min(e_propriedades.values()):
@@ -169,7 +180,7 @@ def induzir_arvore(tabela, propriedades):
         return False
     
     else:
-        # Copiar valor exclído para a propriedade
+        # Copiar valor excluído para a propriedade
         indice_propriedade = propriedades.index(entropia(copy(tabela), copy(propriedades)))
         propriedade = propriedades.pop(indice_propriedade)
 
@@ -222,6 +233,50 @@ def gerar_propriedades(tabela):
     return propriedades    
     
 
+def consultar(tabela, propriedades):
+    respostas = {}
+    for propriedade in propriedades:
+        valores_propriedade = {}
+        op = 0
+        for linha in tabela:
+            if not linha[propriedade] in valores_propriedade.values():
+                op +=1
+                valores_propriedade[op] = linha[propriedade]
+        print(f'{propriedade}: ')
+
+        limpar_janela()
+        for resposta in respostas.items():
+            print(f'{resposta[0]}: {resposta[1]}') 
+
+        print(propriedade)
+        for opcao in valores_propriedade.items():
+            print(f'opção {opcao[0]}: {opcao[1]}', end="      ")
+        print()
+        resposta = int(input(": "))
+        respostas[propriedade] = valores_propriedade[resposta]
+    return respostas
+
+
+def buscar_arvore(respostas, no):
+    if type(no) == Propriedade:
+        propriedade = no.chave
+        ponteiros = no.valores_propriedade
+
+        for ponteiro in ponteiros.items():
+            if respostas[propriedade] == ponteiro[0]:
+                if type(ponteiro[1]) == Resultado:
+                    return ponteiro[1].chave
+                else:
+                    resultado = buscar_arvore(copy(respostas), copy(ponteiro[1]))
+                    return resultado
+    else:
+        return no.chave    
+
+
+global base_resultado
+base_resultado = 'Risco'
+
+
 if __name__=='__main__':
     with open('Risco.csv', 'r') as csvfile:
         csv_reader = csv.DictReader(csvfile)
@@ -234,10 +289,24 @@ if __name__=='__main__':
         #    print(i)
 
         propriedades = copy(gerar_propriedades(tabela))
+        #print(propriedades)
         
         arv = induzir_arvore(copy(tabela), copy(propriedades)) 
+        #mostrar_arvore(arv)
 
-        mostrar_arvore(arv)
-
-        #entropia_resultado = entropia(copy(tabela), copy(propriedades))
+        entropia_resultado = entropia(copy(tabela), copy(propriedades))
         #print(entropia_resultado)
+        
+        respostas = consultar(copy(tabela), copy(propriedades))
+        #print(respostas)
+
+        resultado = buscar_arvore(copy(respostas), copy(arv))
+        limpar_janela()
+
+        for resposta in respostas.items():
+            print(f'{resposta[0]}: {resposta[1]}') 
+        
+        # Estilizar resultado
+        estilo ='\033[1m'+'\033[47m'+'\033[41m'
+        sem_estilo = '\033[0m'
+        print(f'\n{estilo}{base_resultado.upper()} {resultado.upper()}{sem_estilo}\n')
