@@ -42,7 +42,7 @@ def mostrar_arvore(no):
     #    pass
 
 
-def entropia(tabela, propriedades):
+def calcular_entropia(tabela, propriedades):
     #                       ENTROPIA TABELA
 
     # Buscar todos os valores possíveis no resultado da tabela e suas respectivas frequẽncias
@@ -177,11 +177,13 @@ def induzir_arvore(tabela, propriedades):
      # Sem propriedades
     elif len(propriedades) == 0:
         #print("*****Retornar o nó folha co alguma coisa*****")
-        return False
+        nome_classe = ' ou '.join(resultados) #disjunção para cada valor da classe
+        classe_resultado = Resultado(nome_classe)
+        return classe_resultado
     
     else:
         # Copiar valor excluído para a propriedade
-        indice_propriedade = propriedades.index(entropia(copy(tabela), copy(propriedades)))
+        indice_propriedade = propriedades.index(calcular_entropia(copy(tabela), copy(propriedades)))
         propriedade = propriedades.pop(indice_propriedade)
 
         # Buscar todos os valores possíveis na propriedade da tabela.
@@ -233,7 +235,7 @@ def gerar_propriedades(tabela):
     return propriedades    
     
 
-def consultar(tabela, propriedades):
+def gerar_consulta(tabela, propriedades):
     respostas = {}
     for propriedade in propriedades:
         valores_propriedade = {}
@@ -274,11 +276,11 @@ def buscar_arvore(respostas, no):
 
 
 global base_resultado
-base_resultado = 'Risco'
+base_resultado = 'Risco' # Substituir nome da classe
 
 
 if __name__=='__main__':
-    with open('Risco.csv', 'r') as csvfile:
+    with open('Risco.csv', 'r') as csvfile: # Substituir arquivo
         csv_reader = csv.DictReader(csvfile)
     
         tabela = []
@@ -294,10 +296,10 @@ if __name__=='__main__':
         arv = induzir_arvore(copy(tabela), copy(propriedades)) 
         #mostrar_arvore(arv)
 
-        entropia_resultado = entropia(copy(tabela), copy(propriedades))
+        #entropia_resultado = calcular_entropia(copy(tabela), copy(propriedades))
         #print(entropia_resultado)
         
-        respostas = consultar(copy(tabela), copy(propriedades))
+        respostas = gerar_consulta(copy(tabela), copy(propriedades))
         #print(respostas)
 
         resultado = buscar_arvore(copy(respostas), copy(arv))

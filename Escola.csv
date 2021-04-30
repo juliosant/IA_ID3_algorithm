@@ -1,0 +1,10 @@
+Resultado,Nota,Frequencia
+Aprovado,Maior que 6,Baixa
+Reprovado,Menor que 6,Moderado
+Aprovado,Igual à 6,Moderado
+Aprovado,Maior que 6,Alta
+Aprovado,Maior que 6,Alta
+Reprovado,Menor que 6,Baixa
+Aprovado,Igual à 6,Alta
+Reprovado,Menor que 6,Baixa
+Reprovado,Menor que 6,Moderado
