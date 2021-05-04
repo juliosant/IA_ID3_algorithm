@@ -53,19 +53,15 @@ def calcular_entropia(tabela, propriedades):
             for linha in tabela:
                 if linha[base_resultado] == linha_id[base_resultado]:
                     count +=1
-            resultados_frequencia[linha_id[base_resultado]] = count
-    #print(resultados_frequencia)
-
+            resultados_frequencia[linha_id[base_resultado]] = count/len(tabela)
+            #print(f'{linha_id[base_resultado]} = {count}')
     
-    # Razão entre a frequencia do resultado pela qtde total na da tabela
-    razao_frequencia = {}
-    for frequencia in resultados_frequencia.items():
-        razao_frequencia[f'p_{frequencia[0]}'] = frequencia[1]/len(tabela)
-    #print(razao_frequencia)
+    #for i in resultados_frequencia.items():
+    #    print(f'{i[0]} - {i[1]}')
     
 
     e_tabela = 0
-    for frequencia in razao_frequencia.values():
+    for frequencia in resultados_frequencia.values():
         e_tabela -= frequencia * log(frequencia, 2)
     #print(e_tabela)
     
@@ -87,7 +83,7 @@ def calcular_entropia(tabela, propriedades):
     
     #for linha in propriedades_frequencia.items():
     #    print(f'{linha[0]} - {linha[1]}')
-
+    
     
     propriedades_freq_resultado = {}
     for propriedade in propriedades_frequencia.items():
@@ -102,23 +98,23 @@ def calcular_entropia(tabela, propriedades):
                     nova_tabela.append(copy(linha))
             #print(valor)
         #print(valores_frequencia)
-
+        
             resultados_freq = {}
             # Buscar todos os valores possíveis no resultado da tabela e suas respectivas frequẽncias da tabela extraída.
-            for valor_resultado in resultados_frequencia.keys():
-                for linha_id in nova_tabela: # Cada atribut
-                    count = 0
-                    if not linha_id[base_resultado] in resultados_freq:
-                        for linha in nova_tabela: # Quantidade de cada propriedade
-                            if linha[base_resultado] == linha_id[base_resultado]:
-                                count +=1
-                        resultados_freq[linha_id[base_resultado]] = count
-                valores_frequencia[valor] = resultados_freq       
+            #for valor_resultado in resultados_frequencia.keys():
+            for linha_id in nova_tabela: # Cada atribut
+                count = 0
+                if not linha_id[base_resultado] in resultados_freq:
+                    for linha in nova_tabela: # Quantidade de cada propriedade
+                        if linha[base_resultado] == linha_id[base_resultado]:
+                            count +=1
+                    resultados_freq[linha_id[base_resultado]] = count
+            valores_frequencia[valor] = resultados_freq       
         propriedades_freq_resultado[propriedade[0]] = valores_frequencia
 
     #for linha in propriedades_freq_resultado.items():
     #    print(f'{linha[0]} - {linha[1]}')
-
+    
     # Calcular entropia para cada valor da propriedade
     e_valores = {}
     for propriedade in propriedades_freq_resultado.items():
@@ -137,7 +133,7 @@ def calcular_entropia(tabela, propriedades):
     
     #for linha in e_valores.items():
     #    print(f' {linha[0]} - {linha[1]}')
-
+    
     # Calcular entropia para cada propriedade
     e_propriedades = {}
     for propriedade in e_valores.items():
@@ -147,7 +143,7 @@ def calcular_entropia(tabela, propriedades):
                 if propriedade[0] == propriedade_p[0]:
                     for valor_p in propriedade_p[1].items():
                         if valor[0] == valor_p[0]:
-                            entropia_calculo += valor[1] * valor_p[1]/sum(propriedade_p[1].values())
+                            entropia_calculo += valor[1] * valor_p[1]/len(tabela) #sum(propriedade_p[1].values()
         e_propriedades[propriedade[0]] = entropia_calculo
     
     #for linha in e_propriedades.items():
@@ -282,23 +278,25 @@ base_resultado = 'Risco' # Substituir nome da classe
 if __name__=='__main__':
     with open('Risco.csv', 'r') as csvfile: # Substituir arquivo
         csv_reader = csv.DictReader(csvfile)
-    
+        
         tabela = []
         for i in csv_reader:
             tabela.append(i)
         
         #for i in tabela:
         #    print(i)
-
+        
         propriedades = copy(gerar_propriedades(tabela))
         #print(propriedades)
         
         arv = induzir_arvore(copy(tabela), copy(propriedades)) 
         #mostrar_arvore(arv)
-
+        
         #entropia_resultado = calcular_entropia(copy(tabela), copy(propriedades))
         #print(entropia_resultado)
         
+        
+        # ------ CONSULTA ------ 
         respostas = gerar_consulta(copy(tabela), copy(propriedades))
         #print(respostas)
 
